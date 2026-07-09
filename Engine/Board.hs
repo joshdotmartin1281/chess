@@ -1,38 +1,10 @@
-module Engine where
+module Engine.Board where 
 
+import Engine.Types
 import qualified Data.Map as Map
 
-data Color = White | Black
-    deriving (Show)
-
-data Rank = R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8
-    deriving (Eq, Ord, Show)
-data File = A | B | C | D | E | F | G | H
-    deriving (Eq, Ord, Show)
-
-data PieceType = Pawn | Knight | Bishop | Rook | Queen | King
-    deriving (Show)
-data Piece = Piece Color PieceType
-    deriving (Show)
-
-data Square = Square
-    { file :: File
-    , rank :: Rank
-    }
-    deriving (Eq, Ord, Show)
-
-data Move = Move
-    { movingPiece :: PieceType
-    , destination :: Square
-    , capture      :: Bool
-    , promotion    :: Maybe PieceType
-    }
-    deriving (Show)
-
-newtype Board = Board (Map.Map Square Piece)
-
-instance Show Board where
-    show board = 
+renderBoard :: Board -> String
+renderBoard board = 
         unlines $
             "+ - + - + - + - + - + - + - + - +" :
             concatMap renderRank ranks
@@ -62,6 +34,17 @@ movePiece start end board =
 pieceAt :: Square -> Board -> Maybe Piece
 pieceAt sq (Board b) = Map.lookup sq b
 
+occupiedSquares :: Board -> [Square]
+occupiedSquares (Board b) = Map.keys b
+
+allSquares :: [Square]
+allSquares =
+    [ Square f r
+    | r <- [R1, R2, R3, R4, R5, R6, R7, R8]
+    , f <- [A, B, C, D, E, F, G, H]
+    ]
+
+
 pieceChar :: Piece -> Char
 pieceChar (Piece White Pawn)   = 'P'
 pieceChar (Piece White Knight) = 'N'
@@ -82,6 +65,7 @@ squareChar board sq =
     case pieceAt sq board of
         Nothing -> '*'
         Just p  -> pieceChar p
+
 
 initialBoard :: Board
 initialBoard = foldr (\(sq, p) b -> placePiece sq p b) emptyBoard pieces
@@ -117,8 +101,8 @@ initialBoard = foldr (\(sq, p) b -> placePiece sq p b) emptyBoard pieces
         , (Square A R8, Piece Black Rook)
         , (Square B R8, Piece Black Knight)
         , (Square C R8, Piece Black Bishop)
-        , (Square D R8, Piece Black King)
-        , (Square E R8, Piece Black Queen) 
+        , (Square E R8, Piece Black King)
+        , (Square D R8, Piece Black Queen) 
         , (Square F R8, Piece Black Bishop)
         , (Square G R8, Piece Black Knight)
         , (Square H R8, Piece Black Rook)
