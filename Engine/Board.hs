@@ -4,17 +4,34 @@ import Engine.Types
 import qualified Data.Map as Map
 
 renderBoard :: Board -> String
-renderBoard board = 
-        unlines $
-            "+ - + - + - + - + - + - + - + - +" :
-            concatMap renderRank ranks
-        where
-            files = [A, B, C, D, E, F, G, H]
-            ranks = [R8, R7, R6, R5, R4, R3, R2, R1]
-            renderRank r = 
-                [ "|" ++ concatMap (\f -> " " ++ [squareChar board (Square f r)] ++ " |") files 
-                    , "+ - + - + - + - + - + - + - + - +"
-                ]
+renderBoard board =
+    unlines $
+        border :
+        concatMap renderRank ranks ++
+        [fileLabels]
+  where
+    files = [A, B, C, D, E, F, G, H]
+    ranks = [R8, R7, R6, R5, R4, R3, R2, R1]
+
+    border = "  + - + - + - + - + - + - + - + - +"
+
+    renderRank r =
+        [ showRank r ++ " |"
+            ++ concatMap (\f -> " " ++ [squareChar board (Square f r)] ++ " |") files
+        , border
+        ]
+
+    fileLabels = "    A   B   C   D   E   F   G   H"
+
+    showRank r = case r of
+        R1 -> "1"
+        R2 -> "2"
+        R3 -> "3"
+        R4 -> "4"
+        R5 -> "5"
+        R6 -> "6"
+        R7 -> "7"
+        R8 -> "8"
 
 emptyBoard :: Board
 emptyBoard = Board Map.empty

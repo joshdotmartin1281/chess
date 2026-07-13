@@ -14,6 +14,30 @@ knightOffsets =
     , (-1,2)
     ]
 
+bishopOffsets =
+    [ (1,1)
+    , (1,-1)
+    , (-1,1)
+    , (-1,-1)
+    ]
+
+rookOffsets = 
+    [ (1,0)
+    , (0,1)
+    , (-1,0)
+    , (0,-1)
+    ]
+
+
+kingOffsets = 
+    bishopOffsets ++ rookOffsets
+
+
+queenOffsets =
+    bishopOffsets ++ rookOffsets
+
+
+
 offsetFile :: File -> Int -> Maybe File
 offsetFile f d =
     let n = fromEnum f + d
@@ -58,11 +82,49 @@ knightMoves pos color fromSq =
     ]
 
 
+bishopMoves :: Position -> Color -> Square -> [Move]
+bishopMoves pos color fromSq =
+    concatMap (ray pos color fromSq) bishopOffsets
+
+
+rookMoves :: Position -> Color -> Square -> [Move]
+rookMoves pos color fromSq = 
+    concatMap (ray pos color fromSq) rookOffsets
+
+
+queenMoves :: Position -> Color -> Square -> [Move]
+queenMoves pos color fromSq =
+    concatMap (ray pos color fromSq) queenOffsets
+
+
+kingMoves :: Position -> Color -> Square -> [Move]
+kingMoves pos color fromSq = 
+    [ Move fromSq toSq Nothing
+    | offset <- kingOffsets
+    , Just toSq <- [offsetSquare fromSq offset]
+    , canMoveTo pos color toSq
+    ]
+
+
 pawnMoves _ _ _ = []
-bishopMoves _ _ _ = []
-rookMoves _ _ _ = []
-queenMoves _ _ _ = []
-kingMoves _ _ _ = []
+
+
+ray :: Position -> Color -> Square -> (Int, Int) -> [Move]
+ray pos color fromSq dir = go fromSq
+  where
+    go sq =
+      case offsetSquare sq dir of
+        Nothing -> []
+
+        Just next ->
+          case pieceAt next (board pos) of
+            Nothing ->
+              Move fromSq next Nothing : go next
+
+            Just (Piece c _)
+              | c /= color -> [Move fromSq next Nothing]
+              | otherwise  -> []
+
 
 canMoveTo :: Position -> Color -> Square -> Bool
 canMoveTo pos color sq = 
