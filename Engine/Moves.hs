@@ -3,6 +3,12 @@ module Engine.Moves where
 import Engine.Types
 import Engine.Board
 
+
+startRank :: Color -> Rank
+startRank White = R2
+startRank Black = R7
+
+
 knightOffsets =
     [ (1,2)
     , (2,1)
@@ -36,6 +42,13 @@ kingOffsets =
 queenOffsets =
     bishopOffsets ++ rookOffsets
 
+
+captureOffsets color =
+    [(-1, pawnDirection color), (1, pawnDirection color)]
+
+pawnDirection :: Color -> Int
+pawnDirection White = 1
+pawnDirection Black = -1
 
 
 offsetFile :: File -> Int -> Maybe File
@@ -106,7 +119,38 @@ kingMoves pos color fromSq =
     ]
 
 
-pawnMoves _ _ _ = []
+pawnMoves :: Position -> Color -> Square -> [Move]
+pawnMoves pos color from =
+    singleMove ++ doubleMove ++ captureMoves
+  where
+    singleMove =
+        case offsetSquare from (0, pawnDirection color) of
+            Just to
+                | pieceAt to (board pos) == Nothing ->
+                    [Move from to Nothing]
+            _ ->
+                []
+    doubleMove =
+        case from of
+            Square _ r
+                | r == startRank color ->
+                    case ( offsetSquare from (0, pawnDirection color)
+                         , offsetSquare from (0, 2 * pawnDirection color) ) of
+                        (Just one, Just two)
+                            | pieceAt one (board pos) == Nothing
+                            , pieceAt two (board pos) == Nothing ->
+                                [Move from two Nothing]
+                        _ ->
+                            []
+            _ ->
+                []
+    captureMoves =
+        [ Move from to Nothing
+        | offset <- captureOffsets color
+        , Just to <- [offsetSquare from offset]
+        , Just (Piece c _) <- [pieceAt to (board pos)]
+        , c /= color
+        ]
 
 
 ray :: Position -> Color -> Square -> (Int, Int) -> [Move]
@@ -146,16 +190,30 @@ allMoves pos =
             Nothing -> False
 
 
-makeMove :: Move -> Position -> Position
-makeMove move pos = case pieceAt (from move) (board pos) of
+makeMove move pos =
+    case pieceAt (from move) (board pos) of
         Nothing -> pos
-        Just piece ->let newBoard = placePiece (to move) piece (removePiece (from move) (board pos))
-            in pos { board = newBoard
-                   , sideToMove = 
-                        case sideToMove pos of
+        Just piece ->
+            let
+                newBoard =
+                    placePiece (to move) piece $
+                    removePiece (from move) (board pos)
+
+                newSide =
+                    case sideToMove pos of
                         White -> Black
                         Black -> White
-                    }
+
+                newFullmove =
+                    case sideToMove pos of
+                        Black -> fullmoveNumber pos + 1
+                        White -> fullmoveNumber pos
+            in
+            pos
+                { board = newBoard
+                , sideToMove = newSide
+                , fullmoveNumber = newFullmove
+                }
 
 
 initialPosition :: Position
