@@ -125,3 +125,20 @@ initialBoard = foldr (\(sq, p) b -> placePiece sq p b) emptyBoard pieces
         , (Square H R8, Piece Black Rook)
         ]
 
+
+initialPosition :: Position
+initialPosition = Position
+        { board = initialBoard
+        , sideToMove = White
+        , castlingRights =
+            CastlingRights
+                { whiteKingSide = True
+                , whiteQueenSide = True
+                , blackKingSide = True
+                , blackQueenSide = True
+                }
+        , enPassantTarget = Nothing
+        , halfmoveClock = 0
+        , fullmoveNumber = 1
+        }
+
