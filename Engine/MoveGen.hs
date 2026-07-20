@@ -12,9 +12,28 @@ startRank White = R2
 startRank Black = R7
 
 
+opposite :: Color -> Color
+opposite White = Black
+opposite Black = White
+
+
 pawnDirection :: Color -> Int
 pawnDirection White = 1
 pawnDirection Black = -1
+
+
+promotionRank :: Color -> Rank
+promotionRank White = R8
+promotionRank Black = R1
+
+
+promotionMoves :: Square -> Square -> [Move]
+promotionMoves from to =
+    [ Move from to (Just Queen)
+    , Move from to (Just Rook)
+    , Move from to (Just Bishop)
+    , Move from to (Just Knight)
+    ]
 
 
 captureOffsets color =
@@ -23,13 +42,19 @@ captureOffsets color =
 
 pawnMoves :: Position -> Color -> Square -> [Move]
 pawnMoves pos color from =
-    singleMove ++ doubleMove ++ captureMoves
+    singleMove ++ doubleMove ++ captureMoves ++ enPassantMoves
   where
+    mkMoves to
+        | rank to == promotionRank color =
+            promotionMoves from to
+        | otherwise =
+            [Move from to Nothing]
+    
     singleMove =
         case offsetSquare from (0, pawnDirection color) of
             Just to
                 | pieceAt to (board pos) == Nothing ->
-                    [Move from to Nothing]
+                    mkMoves to
             _ ->
                 []
 
@@ -48,13 +73,27 @@ pawnMoves pos color from =
             _ ->
                 []
 
+    enPassantMoves = 
+        case enPassantTarget pos of
+            Nothing ->
+                []
+
+            Just target ->
+                [ Move from target Nothing
+                | offset <- captureOffsets color
+                , offsetSquare from offset == Just target
+                , let capturedSquare = Square (file target) (rank from)
+                , pieceAt capturedSquare (board pos) == Just (Piece (opposite color) Pawn)
+                ]
+
     captureMoves =
-        [ Move from to Nothing
-        | offset <- captureOffsets color
-        , Just to <- [offsetSquare from offset]
-        , Just (Piece c _) <- [pieceAt to (board pos)]
-        , c /= color
-        ]
+        concat
+            [ mkMoves to
+            | offset <- captureOffsets color
+            , Just to <- [offsetSquare from offset]
+            , Just (Piece c _) <- [pieceAt to (board pos)]
+            , c /= color
+            ]
 
 
 knightOffsets =
