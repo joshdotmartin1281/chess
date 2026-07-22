@@ -46,7 +46,8 @@ data Position = Position
     , halfmoveClock    :: Int
     , fullmoveNumber   :: Int
     }
+    deriving (Show)
 
 newtype Board = Board (Map.Map Square Piece)
-
+    deriving (Show)
 
