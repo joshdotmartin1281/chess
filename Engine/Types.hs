@@ -28,7 +28,7 @@ data Move = Move
     , to :: Square
     , promotion    :: Maybe PieceType
     }
-    deriving (Show)
+    deriving (Eq, Show)
 
 data CastlingRights = CastlingRights
     { whiteKingSide  :: Bool

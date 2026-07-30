@@ -4,8 +4,7 @@ module Engine.Legal
 
 import Engine.Board
 import Engine.Types
-import Engine.MakeMove
-import Engine.MoveGen
+import Engine.Moves
 
 makeLegalMove :: Move -> Position -> Maybe Position 
 makeLegalMove move pos 
@@ -14,7 +13,8 @@ makeLegalMove move pos
 
 
 isLegalMove :: Move -> Position -> Bool
-isLegalMove move pos = False
+isLegalMove move pos = move `elem` allMoves pos &&
+    not (inCheck (sideToMove pos) (makeMove move pos))
 
 
 inCheck :: Color -> Position -> Bool
